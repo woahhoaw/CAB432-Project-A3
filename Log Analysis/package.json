@@ -1,0 +1,35 @@
+{
+  "name": "log-analyzer",
+  "version": "1.0.0",
+  "description": "Monolithic REST API for log upload & CPU-intensive analysis (CAB432 A1 scaffold)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "NODE_ENV=development node app.js"
+  },
+  "keywords": [
+    "logs",
+    "analysis",
+    "cloud",
+    "CAB432",
+    "REST",
+    "Docker"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.896.0",
+    "@aws-sdk/client-s3": "^3.896.0",
+    "@aws-sdk/client-ssm": "^3.896.0",
+    "@aws-sdk/lib-dynamodb": "^3.896.0",
+    "@aws-sdk/s3-request-presigner": "^3.896.0",
+    "axios": "^1.12.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "jwk-to-pem": "^2.0.7",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.1"
+  }
+}

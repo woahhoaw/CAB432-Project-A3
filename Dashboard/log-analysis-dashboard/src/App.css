@@ -1,0 +1,38 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f1f5f9;
+}
+
+main {
+  min-height: 100vh;
+  padding: 2rem;
+  background: #f1f5f9;
+}
+
+/* Make container take full width */
+.page-container {
+  width: 100%;
+  max-width: 1200px;      /* stops it going too wide */
+  margin: 0 auto;         /* center horizontally */
+  padding: 2rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+}
+/* Grid layout for summary */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+/* Card style for sections */
+.card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
