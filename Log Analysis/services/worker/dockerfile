@@ -1,0 +1,12 @@
+FROM node:20-alpine
+WORKDIR /app
+
+# Copy only what's needed (your top-level app code + worker files)
+COPY ../../Log Analysis/package*.json ./LogAnalysis/
+COPY ../../Log Analysis ./LogAnalysis
+COPY ./package.json ./package.json
+RUN npm ci --omit=dev || npm install --omit=dev
+
+COPY ./worker.js ./worker.js
+ENV NODE_ENV=production
+CMD ["node","worker.js"]

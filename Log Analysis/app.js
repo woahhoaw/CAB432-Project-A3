@@ -19,6 +19,9 @@ initCognito({ userPoolId: process.env.COGNITO_USERPOOL_ID }).catch(console.error
 // Healthcheck (handy for quick pings)
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
+// SQS QUEUE
+const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
+const sqs = new SQSClient({ region: process.env.AWS_REGION || 'ap-southeast-2' })
 // Keep multer so legacy /logs/upload still works if you want:
 const upload = multer({ dest: path.join('/tmp', 'uploads') });
 
@@ -235,5 +238,29 @@ app.delete('/logs/:logId', authMiddleware, requireRole('admin'), async (req, res
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`API listening on :${PORT}`));
+app.post('/logs/:logId/analyze-queue', authMiddleware, async (req, res) => {
+  try {
+    const { logId } = req.params;
+    const log = await store.getLog(logId);
+    if (!log) return res.status(404).json({ message: 'Log not found' });
+
+    const job = await store.createJob(logId);              // status=queued
+    const { SQS_QUEUE_URL } = await store.cfg();           // from SSM/env
+    if (!SQS_QUEUE_URL) return res.status(500).json({ message: 'SQS queue not configured' });
+
+    await sqs.send(new SendMessageCommand({
+      QueueUrl: SQS_QUEUE_URL,
+      MessageBody: JSON.stringify({ jobId: job.jobId, logId })
+    }));
+
+    // no local analyzer here — worker will pick it up
+    res.status(202).json({ ok: true, jobId: job.jobId, status: 'queued' });
+  } catch (err) {
+    console.error('POST /logs/:logId/analyze-queue error', err);
+    res.status(500).json({ message: 'Analyze-queue failed' });
+  }
+});
+
+module.exports = app;
+
+

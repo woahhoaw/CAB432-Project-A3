@@ -29,10 +29,12 @@ async function cfg() {
     DDB_SUMMARIES: process.env.DDB_SUMMARIES || await readParam('/n11603674-log-analysis/DDB_SUMMARIES', 'LogSummaries-n11603674'),
     DDB_EVENTS: process.env.DDB_EVENTS || await readParam('/n11603674-log-analysis/DDB_EVENTS', 'LogEvents-n11603674'),
     DDB_JOBS: process.env.DDB_JOBS || await readParam('/n11603674-log-analysis/DDB_JOBS', 'Jobs-n11603674'),
+    SQS_QUEUE_URL: process.env.SQS_QUEUE_URL || await readParam('/n11603674-log-analysis/SQS_QUEUE_URL', '')
   };
 }
 
 /* ---------------- Logs ---------------- */
+async function getConfig() { return cfg(); }
 
 async function saveLogFile(owner, multerFile) {
   const { BUCKET, DDB_LOGS } = await cfg();
@@ -379,5 +381,6 @@ module.exports = {
   createJob, startJob, finishJob, failJob,
   insertEvents, saveSummary, getSummary, queryEvents, deleteLog,
   listLogs, registerUploadedMetadata,
-  findJobsByLogId, getJob           
+  findJobsByLogId, getJob,
+  cfg, getConfig           
 };

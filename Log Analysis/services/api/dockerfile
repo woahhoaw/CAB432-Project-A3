@@ -1,0 +1,25 @@
+# services/api/Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy your application into /app/app (handles the space in "Log Analysis/")
+# NOTE: Build context must be the repo root (we'll pass -f services/api/Dockerfile .)
+COPY ["Log Analysis", "/app/app"]
+COPY ["services/api/server.js", "/app/server.js"]
+
+# Install dependencies for your app (package.json is in /app/app)
+WORKDIR /app/app
+RUN npm ci --omit=dev || npm install --omit=dev
+
+# Back to /app to run the server
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=8080
+EXPOSE 8080
+
+# Optional healthcheck hitting /health
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://127.0.0.1:'+(process.env.PORT||8080)+'/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+
+CMD ["node", "server.js"]
