@@ -1,4 +1,4 @@
-const API_BASE = "http://ec2-54-66-241-237.ap-southeast-2.compute.amazonaws.com:8080";
+ const API_BASE = (import.meta?.env?.VITE_API_BASE_URL && import.meta.env.VITE_API_BASE_URL.trim()) || "http://localhost:8080";
 
 export function setToken(token) {
   localStorage.setItem("token", token);
