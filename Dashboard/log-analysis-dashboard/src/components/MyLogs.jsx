@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { apiFetch } from "../api";
+import { apiFetch, analyzeQueue, getStatus } from "../api";
+import { useRef } from "react";
 
-export default function MyLogs({ onSelectLog }) {
+ export default function MyLogs({ onSelectLog }) {
   const [logs, setLogs] = useState([]);
+  const [busy, setBusy] = useState(null);
+  const pollRef = useRef(null);
 
   // load logs
   useEffect(() => {
@@ -10,6 +13,30 @@ export default function MyLogs({ onSelectLog }) {
       .then(setLogs)
       .catch(() => setLogs([]));
   }, []);
+
+  async function handleAnalyze(logId) {
+    try {
+      setBusy(logId);
+      const { jobId } = await analyzeQueue(logId);
+      // quick poll loop for UX (stop after ~60s)
+      let tries = 0;
+      clearInterval(pollRef.current);
+      pollRef.current = setInterval(async () => {
+        tries++;
+        const s = await getStatus(logId);
+        setLogs(ls => ls.map(l =>
+          l.logId === logId ? { ...l, latestStatus: s.latestJob?.status } : l));
+        if (s.hasSummary || s.latestJob?.status === 'succeeded' || tries > 30) {
+          clearInterval(pollRef.current);
+          setBusy(null);
+        }
+      }, 2000);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to queue analysis: ' + e.message);
+      setBusy(null);
+    }
+  }
 
   // delete handler
   async function handleDelete(logId) {
@@ -53,11 +80,21 @@ export default function MyLogs({ onSelectLog }) {
                   <button onClick={() => onSelectLog(log.logId)}>View Summary</button>
                   {" "}
                   <button
+                    disabled={busy === log.logId}
+                    onClick={() => handleAnalyze(log.logId)}
+                    style={{ marginLeft: "0.5rem" }}
+                  >
+                    {busy === log.logId ? "Queuing…" : "Analyze (queue)"}
+                  </button>
+                  {" "}
+                  <button
                     style={{ marginLeft: "0.5rem", color: "red" }}
                     onClick={() => handleDelete(log.logId)}
                   >
                     Delete
                   </button>
+                  {log.latestStatus ? <span style={{ marginLeft: 8 }}>[{log.latestStatus}]</span> : null}
+
                 </td>
               </tr>
             ))}

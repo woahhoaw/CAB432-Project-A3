@@ -1,4 +1,4 @@
-const API_BASE = "http://3.26.7.52:3000";
+const API_BASE = "http://ec2-54-66-241-237.ap-southeast-2.compute.amazonaws.com:8080";
 
 export function setToken(token) {
   localStorage.setItem("token", token);
@@ -61,4 +61,27 @@ export async function apiFetch(path, options = {}) {
   }
   // Fallback to text if not JSON
   return res.text();
+}
+
+export async function analyzeQueue(logId) {
+  return apiFetch(`/logs/${logId}/analyze-queue`, { method: "POST" });
+}
+
+export async function getStatus(logId) {
+  return apiFetch(`/logs/${logId}/status`);
+}
+
+export async function getSummarySmart(logId) {
+  // Handles 202 "not ready" by returning { pending: true, ... }
+  const res = await fetch(`${API_BASE}/logs/${logId}/summary`, {
+    headers: new Headers({
+      "Accept": "application/json",
+      ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {})
+    }),
+  });
+  if (res.status === 202) {
+    return { pending: true, ...(await res.json()) };
+  }
+  if (!res.ok) throw new Error(`API ${res.status} ${res.statusText}`);
+  return { pending: false, ...(await res.json()) };
 }

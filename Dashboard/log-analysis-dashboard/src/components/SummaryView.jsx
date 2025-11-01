@@ -2,14 +2,29 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "../api";
 import { BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import EventsTable from "./EventsTable";
+import { getSummarySmart } from "../api";
 
 export default function SummaryView({ logId }) {
   const [summary, setSummary] = useState(null);
 
   useEffect(() => {
-    apiFetch(`/logs/${logId}/summary`)
-      .then(setSummary)
-      .catch(() => setSummary(null));
+    let alive = true;
+    async function load() {
+      try {
+        const res = await getSummarySmart(logId);
+        if (!alive) return;
+        if (res.pending) {
+          setSummary(null);
+          setTimeout(load, 2000);
+        } else {
+          setSummary(res);
+        }
+      } catch {
+        if (alive) setSummary(null);
+      }
+    }
+    load();
+    return () => { alive = false; };
   }, [logId]);
 
   if (!summary) {
